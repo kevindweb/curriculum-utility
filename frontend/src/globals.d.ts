@@ -1,0 +1,1 @@
+declare var __BACKEND_IP__: string;

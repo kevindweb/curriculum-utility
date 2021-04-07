@@ -1,0 +1,3 @@
+interface Date {
+    toMilitary(): number;
+}
