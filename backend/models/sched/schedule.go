@@ -3,14 +3,17 @@ package models
 import (
 	"fmt"
 	"math"
+
+	course "curriculum-utility/models"
 )
 
 // InitSchedule holds the student courses
 // and a schedule if the user had one saved
 type InitSchedule struct {
-	Schedule     *JSONSchedule `json:"schedule" binding:"required"`
-	Courses      []*Course     `json:"sections" binding:"required"`
-	AsyncCourses []*Course     `json:"async" binding:"required"`
+	Schedule       *JSONSchedule   `json:"schedule" binding:"required"`
+	Courses        []*Course       `json:"sections" binding:"required"`
+	AsyncCourses   []*Course       `json:"async" binding:"required"`
+	MissingCourses []course.Course `json:"missing" binding:"required"`
 }
 
 // JSONSchedule is sent back as response

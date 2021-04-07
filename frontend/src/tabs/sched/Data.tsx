@@ -9,6 +9,7 @@ import {
     Tooltip,
     Slider,
     Typography,
+    CircularProgress,
 } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import { isEmpty } from 'lodash';
@@ -71,6 +72,7 @@ export default function Data({ data, sendFormData, cachedFilters, needUpdate }: 
             <Typography variant="h5" className={classes.header}>Schedule Details</Typography>
             <List component="nav">
                 <Filters sendFormData={sendFormData} cachedFilters={cachedFilters} />
+                {data == false && <ListItem alignItems="center"><CircularProgress /></ListItem>}
             </List>
         </>;
     }

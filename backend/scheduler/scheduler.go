@@ -9,6 +9,7 @@ import (
 	"time"
 
 	db "curriculum-utility/db"
+	models "curriculum-utility/models"
 	sched "curriculum-utility/models/sched"
 	tree "curriculum-utility/tree"
 )
@@ -23,6 +24,7 @@ var Empty struct{}
 type SemCourses struct {
 	Semester      int
 	Sections      []*sched.Course
+	Courses       []models.Course
 	AsyncCourses  map[string]*sched.Course
 	AsyncSections []*sched.Course
 }
@@ -77,7 +79,7 @@ func InitLastSched(userID string) *sched.JSONSchedule {
 
 // InitSections pulls sections from DB and sorts them for the scheduler
 func InitSections(userID string, semester int) []*sched.Course {
-	sections, asyncList, asyncMap := GetSections(userID, semester)
+	sections, treeCourses, asyncList, asyncMap := GetSections(userID, semester)
 
 	sort.SliceStable(sections, func(i, j int) bool {
 		return sections[i].End < sections[j].End
@@ -89,6 +91,7 @@ func InitSections(userID string, semester int) []*sched.Course {
 		// default first semester
 		Semester:      semester,
 		Sections:      sections,
+		Courses:       treeCourses,
 		AsyncCourses:  asyncMap,
 		AsyncSections: asyncList,
 	}
@@ -97,7 +100,7 @@ func InitSections(userID string, semester int) []*sched.Course {
 
 // GetSections takes user data and finds all
 // potential sections they can take
-func GetSections(userID string, semester int) ([]*sched.Course, []*sched.Course, map[string]*sched.Course) {
+func GetSections(userID string, semester int) ([]*sched.Course, []models.Course, []*sched.Course, map[string]*sched.Course) {
 	dbCourseList := tree.GetSemesterCourses(userID, semester)
 	var sectionList []*sched.Course
 	var asyncList []*sched.Course
@@ -154,7 +157,7 @@ func GetSections(userID string, semester int) ([]*sched.Course, []*sched.Course,
 		}
 	}
 
-	return sectionList, asyncList, asyncMap
+	return sectionList, dbCourseList, asyncList, asyncMap
 }
 
 // RunSchedulerFirst is called by main to get our sections on frontend load
@@ -162,6 +165,7 @@ func RunSchedulerFirst(userID string) *sched.InitSchedule {
 	var semAndList SemCourses
 	var sections []*sched.Course
 	var asyncSections []*sched.Course
+	var missingCourses []models.Course
 	var ok bool
 
 	schedule := InitLastSched(userID)
@@ -190,12 +194,14 @@ func RunSchedulerFirst(userID string) *sched.InitSchedule {
 
 	if semAndList, ok = userMap[userID]; ok {
 		asyncSections = semAndList.AsyncSections
+		missingCourses = semAndList.Courses
 	}
 
 	res := &sched.InitSchedule{
-		Courses:      sections,
-		AsyncCourses: asyncSections,
-		Schedule:     schedule,
+		Courses:        sections,
+		MissingCourses: missingCourses,
+		AsyncCourses:   asyncSections,
+		Schedule:       schedule,
 	}
 
 	return res
@@ -260,6 +266,7 @@ func PullCourses(userData *sched.JSONFilter, userID string) *sched.InitSchedule 
 	var semAndList SemCourses
 	var sections []*sched.Course
 	var asyncSections []*sched.Course
+	var missingCourses []models.Course
 	asyncMap := semAndList.AsyncCourses
 	var ok bool
 
@@ -268,14 +275,16 @@ func PullCourses(userData *sched.JSONFilter, userID string) *sched.InitSchedule 
 		return nil
 	} else if semAndList.Semester != userData.Semester {
 		sections = InitSections(userID, userData.Semester)
-		if semAndList, ok = userMap[userID]; !ok {
+		if semAndList, ok = userMap[userID]; ok {
 			asyncMap = semAndList.AsyncCourses
 			asyncSections = semAndList.AsyncSections
+			missingCourses = semAndList.Courses
 		}
 	} else {
 		sections = semAndList.Sections
 		asyncSections = semAndList.AsyncSections
 		asyncMap = semAndList.AsyncCourses
+		missingCourses = semAndList.Courses
 	}
 
 	filters := initFilters(userData, sections)
@@ -315,9 +324,10 @@ func PullCourses(userData *sched.JSONFilter, userID string) *sched.InitSchedule 
 	}
 
 	res := &sched.InitSchedule{
-		Courses:      sections,
-		AsyncCourses: asyncSections,
-		Schedule:     filters.Schedule,
+		Courses:        sections,
+		AsyncCourses:   asyncSections,
+		MissingCourses: missingCourses,
+		Schedule:       filters.Schedule,
 	}
 
 	return res

@@ -55,6 +55,9 @@ const useStyles = makeStyles((theme: Theme) =>
         header: {
             marginLeft: theme.spacing(2),
         },
+        message: {
+            backgroundColor: theme.palette.error.light,
+        }
     }),
 );
 
@@ -80,6 +83,9 @@ function handleError(err: any) {
 
 function createSchedule(schedule: any, allSections: any): any {
     var sectionSet = new Set(schedule.sectionList);
+
+    var clonedMissingSet = new Set(missingCourses);
+    console.log("SET", clonedMissingSet);
 
     var scheduleCalendar = {} as any;
     scheduleCalendar.schedule = [] as any[];
@@ -123,6 +129,11 @@ function createSchedule(schedule: any, allSections: any): any {
 
         section.section += " (Async Course)";
         filteredSection.push(section);
+
+        console.log("SectionNAME", section.name, clonedMissingSet);
+        clonedMissingSet.delete(section.name);
+        console.log("AFTERRRRRRRRRR", section.name, clonedMissingSet);
+
         scheduleDetails.credits += section.credits;
     })
 
@@ -130,6 +141,11 @@ function createSchedule(schedule: any, allSections: any): any {
         if (!sectionSet.has(section.crn)) {
             return;
         }
+
+        // not missing if we found it
+        console.log("SectionNAME", section.name, clonedMissingSet);
+        clonedMissingSet.delete(section.name);
+        console.log("AFTERRRRRRRRRR", section.name, clonedMissingSet);
 
         filteredSection.push(section);
         scheduleDetails.credits += section.credits;
@@ -171,6 +187,23 @@ function createSchedule(schedule: any, allSections: any): any {
             id: section.name,
         });
     });
+
+    var coursesMissing: any = Array.from(clonedMissingSet);
+    console.log("FINished", clonedMissingSet);
+    missingCoursesMessage = "";
+    var length = coursesMissing.length;
+    if (length > 0) {
+        var message = "";
+        if (length == 1) {
+            message = coursesMissing[0];
+        } else {
+            const last = coursesMissing.pop();
+            message = coursesMissing.join(", ") + ' and ' + last;
+        }
+
+        missingCoursesMessage += "The schedule does not have course(s) " + message + " because of filter constraints or time conflicts.";
+        console.log(missingCoursesMessage);
+    }
 
     var timeDetails = "";
     if (!failedStartTime && !failedEndTime) {
@@ -291,6 +324,8 @@ var firstTime: boolean = true;
 var asyncList: any = [];
 var filters: any = {};
 var needToSubmitFilter = false;
+var missingCourses: any = [];
+var missingCoursesMessage: string = "";
 
 export default function Scheduler() {
     const classes = useStyles();
@@ -353,7 +388,7 @@ export default function Scheduler() {
             }
         } else {
             // tree was updated, here's a new list of potential sections
-            setSections(data.sections, isEmpty(data.async) ? [] : data.async);
+            setSections(data.sections, isEmpty(data.async) ? [] : data.async, isEmpty(data.missing) ? [] : data.missing);
         }
 
         if (!isEmpty(data.schedule.filters)) {
@@ -379,9 +414,13 @@ export default function Scheduler() {
         scheduleDetails = details;
     }
 
-    function setSections(list: any, asyncSections: any) {
+    function setSections(list: any, asyncSections: any, missing: any) {
         sectionList = list;
         asyncList = asyncSections;
+        missingCourses = new Set(missing.map((course: any) => {
+            return course.course;
+        }));
+        console.log(missingCourses, missing);
     }
 
     function formSubmitted(data: any) {
@@ -428,6 +467,11 @@ export default function Scheduler() {
                 <List
                     component="nav"
                 >
+                    {missingCoursesMessage != "" &&
+                        <ListItem className={classes.message}>
+                            {missingCoursesMessage}
+                        </ListItem>
+                    }
                     {filteredSection.length == 0 &&
                         <ListItem>
                             <ListItemText primary="No classes yet in the schedule"></ListItemText>
