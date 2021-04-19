@@ -10,6 +10,7 @@ import {
     Slider,
     Typography,
     CircularProgress,
+    Button,
 } from '@material-ui/core';
 import { createStyles, makeStyles, Theme } from '@material-ui/core/styles';
 import { isEmpty } from 'lodash';
@@ -46,6 +47,9 @@ const useStyles = makeStyles((theme: Theme) =>
         header: {
             marginLeft: theme.spacing(2),
         },
+        updateButton: {
+            textTransform: 'none',
+        }
     }),
 );
 
@@ -82,7 +86,13 @@ export default function Data({ data, sendFormData, cachedFilters, needUpdate }: 
             <Typography variant="h5" className={classes.header}>Schedule Details</Typography>
             <List component="nav">
                 {needUpdate.submitBool && <ListItem button onClick={resubmitFilters}>
-                    <ListItemText primary="Update to tree detected" secondary="Click to resubmit schedule filters" />
+                    <Button
+                        className={classes.updateButton}
+                        variant="contained"
+                        color="secondary"
+                    >
+                        <ListItemText primary="Update to tree detected" secondary="Click to resubmit schedule filters" />
+                    </Button>
                 </ListItem>}
                 <Filters sendFormData={sendFormData} cachedFilters={cachedFilters} />
                 <ListItem>

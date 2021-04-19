@@ -130,9 +130,7 @@ function createSchedule(schedule: any, allSections: any): any {
         section.section += " (Async Course)";
         filteredSection.push(section);
 
-        console.log("SectionNAME", section.name, clonedMissingSet);
         clonedMissingSet.delete(section.name);
-        console.log("AFTERRRRRRRRRR", section.name, clonedMissingSet);
 
         scheduleDetails.credits += section.credits;
     })
@@ -143,9 +141,7 @@ function createSchedule(schedule: any, allSections: any): any {
         }
 
         // not missing if we found it
-        console.log("SectionNAME", section.name, clonedMissingSet);
         clonedMissingSet.delete(section.name);
-        console.log("AFTERRRRRRRRRR", section.name, clonedMissingSet);
 
         filteredSection.push(section);
         scheduleDetails.credits += section.credits;
@@ -189,7 +185,6 @@ function createSchedule(schedule: any, allSections: any): any {
     });
 
     var coursesMissing: any = Array.from(clonedMissingSet);
-    console.log("FINished", clonedMissingSet);
     missingCoursesMessage = "";
     var length = coursesMissing.length;
     if (length > 0) {
@@ -201,8 +196,9 @@ function createSchedule(schedule: any, allSections: any): any {
             message = coursesMissing.join(", ") + ' and ' + last;
         }
 
-        missingCoursesMessage += "The schedule does not have course(s) " + message + " because of filter constraints or time conflicts.";
-        console.log(missingCoursesMessage);
+        if (message != "") {
+            missingCoursesMessage += "The schedule does not have course(s) " + message + " because of filter constraints or time conflicts.";
+        }
     }
 
     var timeDetails = "";

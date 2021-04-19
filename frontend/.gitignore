@@ -1,5 +1,5 @@
 node_modules/
 dist/**/*
-!dist/index.html
-!dist/assets
+!dist/*.html
+!dist/*.png
 package-lock.json

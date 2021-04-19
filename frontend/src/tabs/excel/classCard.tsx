@@ -12,6 +12,8 @@ import Button from '@material-ui/core/Button';
 import Menu from '@material-ui/core/Menu';
 import MenuItem from '@material-ui/core/MenuItem';
 import { Box } from '@material-ui/core';
+import IconButton from '@material-ui/core/IconButton';
+import ArrowDownwardIcon from '@material-ui/icons/ArrowDownward';
 
 const cardStyle: React.CSSProperties = {
 	fontSize: 40,
@@ -176,12 +178,12 @@ export const ClassCard: React.FC<cardProps> = ({ id, index, className, classNum,
 					<Typography variant="h5" component="h2" noWrap = {true} align = "left" style = {{width: 40, fontSize: 21}}>
                         {cred}
                     </Typography>
-					<Typography variant="h5" component="h2" noWrap = {true} align = "right" style = {{width: 40, fontSize : 21}} >
+					<Typography variant="h5" component="h2" noWrap = {true} align = "right" style = {{width: 60, fontSize : 21}} >
                         {grade}
                     </Typography>
-					<Button aria-controls="simple-menu" aria-haspopup="true" onClick={handleClick} style = {{ width: 1 }}>
-                        &darr;
-                    </Button>
+					<IconButton aria-label="simple-menu" onClick={handleClick} size="small">
+          				<ArrowDownwardIcon fontSize="inherit" />
+       				 </IconButton>
 					</Box>	
       					<Menu
         					id="simple-menu"
