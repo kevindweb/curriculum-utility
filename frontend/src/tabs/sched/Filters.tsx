@@ -277,9 +277,9 @@ function FilterModal(props: ModalProps) {
 
         var body = { ...filters };
         // ensure that weights are not 0 (move to 1 at the lowest)
-        body.timeWeight = filters.weights[0] == 0 ? 1 : filters.weights[0];
-        body.creditWeight = filters.weights[1] == 0 ? 1 : filters.weights[1];
-        body.balancedWeight = filters.weights[2] == 0 ? 1 : filters.weights[2];
+        body.timeWeight = filters.weights[0];
+        body.creditWeight = filters.weights[1];
+        body.balancedWeight = filters.weights[2];
         sendFormData(body);
     }
 

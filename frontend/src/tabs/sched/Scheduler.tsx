@@ -85,7 +85,6 @@ function createSchedule(schedule: any, allSections: any): any {
     var sectionSet = new Set(schedule.sectionList);
 
     var clonedMissingSet = new Set(missingCourses);
-    console.log("SET", clonedMissingSet);
 
     var scheduleCalendar = {} as any;
     scheduleCalendar.schedule = [] as any[];
@@ -363,7 +362,7 @@ export default function Scheduler() {
     } else if (!updated && !sched.isLoading && !isEmpty(sched.data)) {
         // first time sections/schedule is loaded upon opening scheduler
         setUpdated(true);
-        if (!isEmpty(sched.data.data.sections) && !arraysEqual(scheduleSectionList.map((section: any) => section.crn).sort(), sched.data.data.sections.map((section: any) => section.crn).sort())) {
+        if (!isEmpty(sched.data.data.sections) && !arraysEqual(scheduleSectionList.concat(asyncList).map((section: any) => section.crn).sort(), sched.data.data.sections.map((section: any) => section.crn).sort())) {
             needToSubmitFilter = true;
         } else {
             needToSubmitFilter = false;
@@ -416,7 +415,6 @@ export default function Scheduler() {
         missingCourses = new Set(missing.map((course: any) => {
             return course.course;
         }));
-        console.log(missingCourses, missing);
     }
 
     function formSubmitted(data: any) {

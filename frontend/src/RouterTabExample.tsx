@@ -65,7 +65,7 @@ export default function RouterTabExample() {
         >
           <Tab label="Tree"></Tab>
           <Tab label="Scheduler"></Tab>
-          <Tab label="Excel Sheet"></Tab>
+          <Tab label="Curriculum Summary"></Tab>
           <div className={classes.fillSpace}></div>
           <h3>{userName}</h3>
           <Button
