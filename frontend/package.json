@@ -38,6 +38,7 @@
     "@material-ui/icons": "^4.9.1",
     "@material-ui/pickers": "^3.2.10",
     "axios": "^0.21.1",
+    "chokidar": "^3.5.1",
     "cytoscape": "^3.16.2",
     "cytoscape-canvas": "^3.0.1",
     "d3": "^6.2.0",
