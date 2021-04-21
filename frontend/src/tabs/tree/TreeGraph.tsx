@@ -27,7 +27,7 @@ const NODE_VERTICAL_SPACING = 150;
 let lastPan: cytoscape.Position = null;
 let lastZoom: number = null;
 
-function treeToCytoscape(tree: TreeStructure, setSemesterErrors: React.Dispatch<React.SetStateAction<TreeError[]>>, hover: number | number[]): cytoscape.ElementsDefinition {
+function treeToCytoscape(tree: TreeStructure, setSemesterErrors: React.Dispatch<React.SetStateAction<TreeError[]>>): cytoscape.ElementsDefinition {
     // First, count the number of classes in each semester to determine positioning
     const semesterCounts: { [semester: number]: { total: number, current: number } } = {};
     for (let req of tree.nodes) {
@@ -147,8 +147,8 @@ interface TreeGraphPropTypes {
     onChangeSemester: (curriculumReqID: number, semester: number) => void,
     onNodeContextMenu: (node: CurriculumRequirement, position: cytoscape.Position) => void,
     setSemesterErrors: React.Dispatch<React.SetStateAction<TreeError[]>>,
-    setHoveredNodes: React.Dispatch<React.SetStateAction<number | number[]>>,
-    hover: number | number[],
+    setHoveredNodes: React.Dispatch<React.SetStateAction<number | number[] | { source: number, targets: number | number[] }>>,
+    hover: number | number[] | { source: number, targets: number | number[] },
     shouldHover: boolean,
 }
 
@@ -161,7 +161,7 @@ export default function TreeGraph(props: TreeGraphPropTypes) {
     const cyGraph = useRef<cytoscape.Core>(null);
 
     const initGraph = () => {
-        const elements = treeToCytoscape(props.treeData, props.setSemesterErrors, props.hover);
+        const elements = treeToCytoscape(props.treeData, props.setSemesterErrors);
         let cy = cytoscape({
             container: treeContainer.current,
             elements: elements,
@@ -329,7 +329,10 @@ export default function TreeGraph(props: TreeGraphPropTypes) {
             const treeNode = props.treeData.nodes[data.id];
             const edges = cyGraph.current.edges();
 
-            const hoveredNodes = [treeNode.curriculumReqID];
+            const hoveredNodes: { source: number, targets: number[] } = {
+                source: treeNode.curriculumReqID,
+                targets: [],
+            };
 
             edges.forEach(edge => {
                 const data = edge.data();
@@ -337,9 +340,9 @@ export default function TreeGraph(props: TreeGraphPropTypes) {
                 const toNode = props.treeData.nodes[data.target];
 
                 if (fromNode.curriculumReqID == treeNode.curriculumReqID) {
-                    hoveredNodes.push(toNode.curriculumReqID);
+                    hoveredNodes.targets.push(toNode.curriculumReqID);
                 } else if (toNode.curriculumReqID == treeNode.curriculumReqID) {
-                    hoveredNodes.push(fromNode.curriculumReqID);
+                    hoveredNodes.targets.push(fromNode.curriculumReqID);
                 }
             });
 
@@ -409,21 +412,26 @@ export default function TreeGraph(props: TreeGraphPropTypes) {
         }
     }
 
-    const applyNodeHover = (hover: number | number[]) => {
+    const applyNodeHover = (hover: number | number[] | { source: number, targets: number | number[] }) => {
         // Handle node hovering / focusing
         const nodes = cyGraph.current.nodes();
         const edges = cyGraph.current.edges();
 
+        // Function to determine if passed in hover list is an object or not
+        const isObject = (hover: number | number[] | { source: number, targets: number | number[] }): hover is { source: number, targets: number | number[] } => {
+            return typeof hover == 'object' && !Array.isArray(hover);
+        }
+
         if (hover !== null) {
             // Turn the supplied hover reqs into a set
-            const hoverSet = new Set([].concat(hover));
+            const hoverSet = isObject(hover) ? new Set([].concat(hover.targets)) : new Set([].concat(hover));
 
             // If any nodes are being hovered, make all other nodes slightly transparent
-            if (hoverSet.size > 0) {
+            if (hoverSet.size > 0 || isObject(hover)) {
                 nodes.forEach(node => {
                     const data = node.data();
                     const treeNode = props.treeData.nodes[data.id];
-                    if (!hoverSet.has(treeNode.curriculumReqID)) {
+                    if (!hoverSet.has(treeNode.curriculumReqID) && (isObject(hover) ? treeNode.curriculumReqID !== hover.source : true)) {
                         node.addClass('dimmed');
                     } else {
                         node.removeClass('dimmed');
@@ -433,15 +441,24 @@ export default function TreeGraph(props: TreeGraphPropTypes) {
 
             // Do the same with edges, ensuring only the edge between the two hovered
             // nodes is not dimmed
-            if (hoverSet.size > 0) {
+            if (hoverSet.size > 0 || isObject(hover)) {
                 edges.forEach(edge => {
                     const data = edge.data();
                     const fromNode = props.treeData.nodes[data.source];
                     const toNode = props.treeData.nodes[data.target];
-                    if (!hoverSet.has(fromNode.curriculumReqID) || !hoverSet.has(toNode.curriculumReqID)) {
-                        edge.addClass('dimmed');
+                    if (!isObject(hover)) {
+                        if (!hoverSet.has(fromNode.curriculumReqID) || !hoverSet.has(toNode.curriculumReqID)) {
+                            edge.addClass('dimmed');
+                        } else {
+                            edge.removeClass('dimmed');
+                        }
                     } else {
-                        edge.removeClass('dimmed');
+                        if ((!hoverSet.has(fromNode.curriculumReqID) && !hoverSet.has(toNode.curriculumReqID)) ||
+                            (fromNode.curriculumReqID !== hover.source && toNode.curriculumReqID !== hover.source)) {
+                            edge.addClass('dimmed');
+                        } else {
+                            edge.removeClass('dimmed');
+                        }
                     }
                 });
             }

@@ -36,6 +36,7 @@ function KeyBox(props: KeyBoxProps) {
 const useTreeKeyStyles = makeStyles(theme => ({
     drawerHeader: {
         marginLeft: theme.spacing(2),
+        marginTop: theme.spacing(2)
     }
 }));
 

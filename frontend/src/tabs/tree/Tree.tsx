@@ -17,6 +17,8 @@ import ErrorPanel from './ErrorPanel';
 import { getTree, setRequirementSemester, setElectiveCourse } from '../../api/tree-api';
 import TreeKey from './TreeKey';
 import SettingsPanel from './SettingsPanel';
+import InfoPanel from './InfoPanel';
+import AlertDialog from './AlertDialog';
 
 // Define types for nodes in our tree
 export interface Course {
@@ -107,7 +109,7 @@ export default function Tree() {
 
   // Node interaction state values
   const [selectedNode, setSelectedNode] = useState<CurriculumRequirement>(null);
-  const [hoveredNodes, setHoveredNodes] = useState<number | number[]>(null);
+  const [hoveredNodes, setHoveredNodes] = useState<number | number[] | { source: number, targets: number | number[] }>(null);
   const [shouldHover, setShouldHover] = useState(false);
 
   // Node context menu state
@@ -137,6 +139,13 @@ export default function Tree() {
 
   // Frontend tree errors
   const [semesterErrors, setSemesterErrors] = useState<TreeError[]>([]);
+
+  // Alert dialog state
+  const [alertOpen, setAlertOpen] = useState(false);
+  const [alertTitle, setAlertTitle] = useState("Alert");
+  const [alertMsg, setAlertMsg] = useState("Are you sure you want to continue?");
+  const [alertContinueAction, setAlertContinueAction] = useState<() => void>(null);
+  const [alertCancelAction, setAlertCancelAction] = useState<() => void>(null);
 
   // Authorization
   const { getAccessTokenSilently } = useAuth0();
@@ -273,7 +282,7 @@ export default function Tree() {
     setCtxMenuOpen(true);
   };
 
-  const handleSetCourseForElective = async (curriculumReqID: number, course: Course) => {
+  const handleSetCourseForElective = (curriculumReqID: number, course: Course) => {
     // Close the elective dialog
     setElectiveDialogOpen(false);
 
@@ -319,11 +328,18 @@ export default function Tree() {
 
   const clearCourseForElective = (curriculumReqID: number) => {
     setCtxMenuOpen(false);
-    handleSetCourseForElective(curriculumReqID, {
-      subject: "NONE",
-      num: "0000",
-      credits: 0
-    });
+
+    openAlertDialog(
+      'Are you sure you want to clear this course?',
+      'The course can be set again, however any grades entered for this course will have to be re-entered.',
+      () => () => {
+        handleSetCourseForElective(curriculumReqID, {
+          subject: "NONE",
+          num: "0000",
+          credits: 0
+        });
+      }
+    );
   }
 
   const setGrade = async (data: { Sub: any, Num: any, Grade: any }) => {
@@ -362,7 +378,7 @@ export default function Tree() {
           num = node.course.num;
           if (grade !== 'IP' && grade !== 'IC') {
             node.satisfied = true;
-          } else if(node.semester != 0) {
+          } else if (node.semester != 0) {
             node.satisfied = false;
           }
         } else {
@@ -381,6 +397,14 @@ export default function Tree() {
       Grade: grade,
       treeClone
     });
+  };
+
+  const openAlertDialog = (title: string, message: string, onContinue?: () => void, onCancel?: () => void) => {
+    setAlertTitle(title);
+    setAlertMsg(message);
+    setAlertContinueAction(onContinue);
+    setAlertCancelAction(onCancel);
+    setAlertOpen(true);
   }
 
   if (treeQuery.isLoading || treeQuery.isLoadingError) {
@@ -401,6 +425,8 @@ export default function Tree() {
         }}
       >
         <Toolbar />
+        <InfoPanel />
+        <Divider />
         <TreeKey />
         <Divider />
         <SettingsPanel shouldHover={shouldHover} setShouldHover={setShouldHover} />
@@ -458,6 +484,13 @@ export default function Tree() {
         open={electiveDialogOpen}
         onClose={() => setElectiveDialogOpen(false)}
         onSelectCourse={handleSetCourseForElective} />
+      <AlertDialog
+        open={alertOpen}
+        setOpen={setAlertOpen}
+        title={alertTitle}
+        message={alertMsg}
+        onContinue={alertContinueAction}
+        onCancel={alertCancelAction} />
     </div>
   )
 }

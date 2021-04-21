@@ -32,7 +32,7 @@ export default function SettingsPanel(props: SettingsPanelProps) {
                 <FormGroup>
                     <FormControlLabel
                         control={<Switch color="primary" checked={props.shouldHover} onChange={handleHoverChange} />}
-                        label="Isolate edges on hover"
+                        label="Isolate arrows when hovering over a requirement"
                     />
                 </FormGroup>
             </Box>
