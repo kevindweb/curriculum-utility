@@ -42,7 +42,8 @@ const theme = createMuiTheme({
 });
 
 
-window.__BACKEND_IP__ = "http://localhost:8081";
+// window.__BACKEND_IP__ = "http://localhost:8081";
+window.__BACKEND_IP__ = "https://kdeems-senior-design-5mz6n.ondigitalocean.app";
 // window.__BACKEND_IP__ = "http://100.26.170.118:8081";
 // window.__BACKEND_IP__ = "https://34.233.135.224:8081";
 const queryClient = new QueryClient()
