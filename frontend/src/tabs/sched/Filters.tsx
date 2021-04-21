@@ -446,7 +446,7 @@ export default function Filters({ sendFormData, cachedFilters }: { sendFormData:
 
     const [updated, setUpdated] = useState(true);
 
-    if (cachedFilters.creditWeight == 0) {
+    if (cachedFilters.creditWeight == 0 && cachedFilters.timeWeight == 0 && cachedFilters.balancedWeight == 0) {
         // only happens in weird database scenarios
         cachedFilters.weights = [33, 33, 33];
     } else if (cachedFilters.end == 0) {
